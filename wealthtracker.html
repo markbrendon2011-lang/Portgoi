@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault & Cash - Wealth Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #121212;
+            color: #f3f4f6;
+        }
+        .bg-burgundy-grad {
+            background: linear-gradient(135deg, #800020 0%, #4a0013 100%);
+        }
+        .bg-onyx {
+            background-color: #1E1E1E;
+        }
+        .bg-matte {
+            background-color: #121212;
+        }
+        .border-burgundy {
+            border-color: #800020;
+        }
+        .text-burgundy {
+            color: #990026;
+        }
+        /* Custom scrollbar for sleek dark feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121212;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #800020;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-3 sm:p-6">
+
+    <!-- App Container -->
+    <div class="w-full max-w-md bg-onyx rounded-3xl shadow-2xl border border-neutral-800 overflow-hidden flex flex-col relative">
+        
+        <!-- Header Bar -->
+        <div class="px-6 pt-6 pb-4 flex items-center justify-between border-b border-neutral-800/80">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-burgundy-grad flex items-center justify-center shadow-lg shadow-burgundy/30">
+                    <i class="fa-solid fa-vault text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-tight text-white">VaultX</h1>
+                    <p class="text-xs text-neutral-400">FamPay & Physical Cash</p>
+                </div>
+            </div>
+            <button onclick="resetData()" class="w-9 h-9 rounded-xl bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:border-burgundy transition-all flex items-center justify-center text-sm" title="Reset Data">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+        </div>
+
+        <!-- Scrollable Content Area -->
+        <div class="p-6 space-y-6 overflow-y-auto max-h-[80vh]">
+            
+            <!-- Total Net Worth Card -->
+            <div class="bg-burgundy-grad rounded-2xl p-6 text-white shadow-xl shadow-burgundy/20 relative overflow-hidden">
+                <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/5 rounded-full blur-xl pointer-events-none"></div>
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-neutral-200">Total Net Worth</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-black/30 text-white backdrop-blur-sm">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span> Live Calc
+                    </span>
+                </div>
+                <div id="totalNetWorth" class="text-4xl font-extrabold tracking-tight my-2">₹0.00</div>
+                <div class="flex items-center justify-between text-xs text-neutral-300 pt-3 border-t border-white/10">
+                    <span id="summaryBreakdownText">Digital: ₹0 • Physical: ₹0</span>
+                    <span id="lastUpdated" class="text-[10px] opacity-75">Saved</span>
+                </div>
+            </div>
+
+            <!-- Quick Summary Pills -->
+            <div class="grid grid-cols-3 gap-2.5">
+                <div onclick="switchTab('fampay')" id="pill-fampay" class="cursor-pointer bg-neutral-900/80 border border-neutral-800 hover:border-burgundy rounded-2xl p-3 text-center transition-all">
+                    <div class="text-[10px] uppercase font-semibold text-neutral-400 mb-1">FamPay</div>
+                    <div id="pillTotalFampay" class="text-sm font-bold text-white">₹0</div>
+                </div>
+                <div onclick="switchTab('notes')" id="pill-notes" class="cursor-pointer bg-neutral-900/80 border border-neutral-800 hover:border-burgundy rounded-2xl p-3 text-center transition-all">
+                    <div class="text-[10px] uppercase font-semibold text-neutral-400 mb-1">Notes</div>
+                    <div id="pillTotalNotes" class="text-sm font-bold text-white">₹0</div>
+                </div>
+                <div onclick="switchTab('coins')" id="pill-coins" class="cursor-pointer bg-neutral-900/80 border border-neutral-800 hover:border-burgundy rounded-2xl p-3 text-center transition-all">
+                    <div class="text-[10px] uppercase font-semibold text-neutral-400 mb-1">Coins</div>
+                    <div id="pillTotalCoins" class="text-sm font-bold text-white">₹0</div>
+                </div>
+            </div>
+
+            <!-- Tab 1: FamPay Digital Wallet -->
+            <div id="section-fampay" class="bg-neutral-900/60 border border-neutral-800/80 rounded-2xl p-5 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-xl bg-purple-950/50 border border-purple-800/50 flex items-center justify-center text-purple-400">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-bold text-white">FamPay Digital Wallet</h2>
+                            <p class="text-[11px] text-neutral-400">Enter active balance</p>
+                        </div>
+                    </div>
+                    <span id="displayFampayTotal" class="text-base font-extrabold text-purple-400">₹0</span>
+                </div>
+                <div>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-400 font-semibold">₹</div>
+                        <input type="number" id="fampayInput" oninput="calculateTotals()" placeholder="0.00" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl py-3 pl-8 pr-4 text-white font-semibold focus:outline-none focus:border-purple-600 transition-all text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Cash Notes Breakdown -->
+            <div id="section-notes" class="bg-neutral-900/60 border border-neutral-800/80 rounded-2xl p-5 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-950/50 border border-emerald-800/50 flex items-center justify-center text-emerald-400">
+                            <i class="fa-solid fa-money-bill-wave"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-bold text-white">Cash Notes</h2>
+                            <p class="text-[11px] text-neutral-400">Paper currency breakdown</p>
+                        </div>
+                    </div>
+                    <span id="displayNotesTotal" class="text-base font-extrabold text-emerald-400">₹0</span>
+                </div>
+
+                <!-- Denominations List -->
+                <div class="space-y-2.5 pt-1">
+                    <!-- Note 500 -->
+                    <div class="flex items-center justify-between bg-neutral-950/70 border border-neutral-800/60 rounded-xl p-3">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-12 text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-900/50 px-2 py-1 rounded-lg text-center">₹500</span>
+                            <span class="text-xs text-neutral-400">× <span id="count-note-500-val">0</span></span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateCount('note', 500, -1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">-</button>
+                            <input type="number" id="note-500" min="0" value="0" oninput="calculateTotals()" class="w-12 bg-neutral-900 border border-neutral-800 text-center text-white text-xs py-1.5 rounded-lg focus:outline-none focus:border-emerald-600">
+                            <button onclick="updateCount('note', 500, 1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Note 200 -->
+                    <div class="flex items-center justify-between bg-neutral-950/70 border border-neutral-800/60 rounded-xl p-3">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-12 text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-900/50 px-2 py-1 rounded-lg text-center">₹200</span>
+                            <span class="text-xs text-neutral-400">× <span id="count-note-200-val">0</span></span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateCount('note', 200, -1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">-</button>
+                            <input type="number" id="note-200" min="0" value="0" oninput="calculateTotals()" class="w-12 bg-neutral-900 border border-neutral-800 text-center text-white text-xs py-1.5 rounded-lg focus:outline-none focus:border-emerald-600">
+                            <button onclick="updateCount('note', 200, 1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Note 100 -->
+                    <div class="flex items-center justify-between bg-neutral-950/70 border border-neutral-800/60 rounded-xl p-3">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-12 text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-900/50 px-2 py-1 rounded-lg text-center">₹100</span>
+                            <span class="text-xs text-neutral-400">× <span id="count-note-100-val">0</span></span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateCount('note', 100, -1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">-</button>
+                            <input type="number" id="note-100" min="0" value="0" oninput="calculateTotals()" class="w-12 bg-neutral-900 border border-neutral-800 text-center text-white text-xs py-1.5 rounded-lg focus:outline-none focus:border-emerald-600">
+                            <button onclick="updateCount('note', 100, 1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Note 50 -->
+                    <div class="flex items-center justify-between bg-neutral-950/70 border border-neutral-800/60 rounded-xl p-3">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-12 text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-900/50 px-2 py-1 rounded-lg text-center">₹50</span>
+                            <span class="text-xs text-neutral-400">× <span id="count-note-50-val">0</span></span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateCount('note', 50, -1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">-</button>
+                            <input type="number" id="note-50" min="0" value="0" oninput="calculateTotals()" class="w-12 bg-neutral-900 border border-neutral-800 text-center text-white text-xs py-1.5 rounded-lg focus:outline-none focus:border-emerald-600">
+                            <button onclick="updateCount('note', 50, 1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Note 20 -->
+                    <div class="flex items-center justify-between bg-neutral-950/70 border border-neutral-800/60 rounded-xl p-3">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-12 text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-900/50 px-2 py-1 rounded-lg text-center">₹20</span>
+                            <span class="text-xs text-neutral-400">× <span id="count-note-20-val">0</span></span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateCount('note', 20, -1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">-</button>
+                            <input type="number" id="note-20" min="0" value="0" oninput="calculateTotals()" class="w-12 bg-neutral-900 border border-neutral-800 text-center text-white text-xs py-1.5 rounded-lg focus:outline-none focus:border-emerald-600">
+                            <button onclick="updateCount('note', 20, 1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Note 10 -->
+                    <div class="flex items-center justify-between bg-neutral-950/70 border border-neutral-800/60 rounded-xl p-3">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-12 text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-900/50 px-2 py-1 rounded-lg text-center">₹10</span>
+                            <span class="text-xs text-neutral-400">× <span id="count-note-10-val">0</span></span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateCount('note', 10, -1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">-</button>
+                            <input type="number" id="note-10" min="0" value="0" oninput="calculateTotals()" class="w-12 bg-neutral-900 border border-neutral-800 text-center text-white text-xs py-1.5 rounded-lg focus:outline-none focus:border-emerald-600">
+                            <button onclick="updateCount('note', 10, 1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Coins Breakdown -->
+            <div id="section-coins" class="bg-neutral-900/60 border border-neutral-800/80 rounded-2xl p-5 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-xl bg-amber-950/50 border border-amber-800/50 flex items-center justify-center text-amber-400">
+                            <i class="fa-solid fa-coins"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-bold text-white">Coins</h2>
+                            <p class="text-[11px] text-neutral-400">Physical spare change</p>
+                        </div>
+                    </div>
+                    <span id="displayCoinsTotal" class="text-base font-extrabold text-amber-400">₹0</span>
+                </div>
+
+                <!-- Coin Denominations List -->
+                <div class="space-y-2.5 pt-1">
+                    <!-- Coin 20 -->
+                    <div class="flex items-center justify-between bg-neutral-950/70 border border-neutral-800/60 rounded-xl p-3">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-12 text-xs font-bold text-amber-400 bg-amber-950/40 border border-amber-900/50 px-2 py-1 rounded-lg text-center">₹20</span>
+                            <span class="text-xs text-neutral-400">× <span id="count-coin-20-val">0</span></span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateCount('coin', 20, -1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">-</button>
+                            <input type="number" id="coin-20" min="0" value="0" oninput="calculateTotals()" class="w-12 bg-neutral-900 border border-neutral-800 text-center text-white text-xs py-1.5 rounded-lg focus:outline-none focus:border-amber-600">
+                            <button onclick="updateCount('coin', 20, 1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Coin 10 -->
+                    <div class="flex items-center justify-between bg-neutral-950/70 border border-neutral-800/60 rounded-xl p-3">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-12 text-xs font-bold text-amber-400 bg-amber-950/40 border border-amber-900/50 px-2 py-1 rounded-lg text-center">₹10</span>
+                            <span class="text-xs text-neutral-400">× <span id="count-coin-10-val">0</span></span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateCount('coin', 10, -1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">-</button>
+                            <input type="number" id="coin-10" min="0" value="0" oninput="calculateTotals()" class="w-12 bg-neutral-900 border border-neutral-800 text-center text-white text-xs py-1.5 rounded-lg focus:outline-none focus:border-amber-600">
+                            <button onclick="updateCount('coin', 10, 1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Coin 5 -->
+                    <div class="flex items-center justify-between bg-neutral-950/70 border border-neutral-800/60 rounded-xl p-3">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-12 text-xs font-bold text-amber-400 bg-amber-950/40 border border-amber-900/50 px-2 py-1 rounded-lg text-center">₹5</span>
+                            <span class="text-xs text-neutral-400">× <span id="count-coin-5-val">0</span></span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateCount('coin', 5, -1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">-</button>
+                            <input type="number" id="coin-5" min="0" value="0" oninput="calculateTotals()" class="w-12 bg-neutral-900 border border-neutral-800 text-center text-white text-xs py-1.5 rounded-lg focus:outline-none focus:border-amber-600">
+                            <button onclick="updateCount('coin', 5, 1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Coin 2 -->
+                    <div class="flex items-center justify-between bg-neutral-950/70 border border-neutral-800/60 rounded-xl p-3">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-12 text-xs font-bold text-amber-400 bg-amber-950/40 border border-amber-900/50 px-2 py-1 rounded-lg text-center">₹2</span>
+                            <span class="text-xs text-neutral-400">× <span id="count-coin-2-val">0</span></span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateCount('coin', 2, -1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">-</button>
+                            <input type="number" id="coin-2" min="0" value="0" oninput="calculateTotals()" class="w-12 bg-neutral-900 border border-neutral-800 text-center text-white text-xs py-1.5 rounded-lg focus:outline-none focus:border-amber-600">
+                            <button onclick="updateCount('coin', 2, 1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Coin 1 -->
+                    <div class="flex items-center justify-between bg-neutral-950/70 border border-neutral-800/60 rounded-xl p-3">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-12 text-xs font-bold text-amber-400 bg-amber-950/40 border border-amber-900/50 px-2 py-1 rounded-lg text-center">₹1</span>
+                            <span class="text-xs text-neutral-400">× <span id="count-coin-1-val">0</span></span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateCount('coin', 1, -1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">-</button>
+                            <input type="number" id="coin-1" min="0" value="0" oninput="calculateTotals()" class="w-12 bg-neutral-900 border border-neutral-800 text-center text-white text-xs py-1.5 rounded-lg focus:outline-none focus:border-amber-600">
+                            <button onclick="updateCount('coin', 1, 1)" class="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition flex items-center justify-center text-xs font-bold">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer status -->
+        <div class="px-6 py-3 bg-neutral-950 border-t border-neutral-800/80 text-center text-[11px] text-neutral-500">
+            VaultX Wealth Tracker • Securely saved to device storage
+        </div>
+
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-neutral-900 border border-neutral-700 text-white px-4 py-2.5 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 flex items-center space-x-2.5 text-xs z-50">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMsg">Changes saved</span>
+    </div>
+
+    <script>
+        const noteDenominations = [500, 200, 100, 50, 20, 10];
+        const coinDenominations = [20, 10, 5, 2, 1];
+
+        // Load data on window load
+        window.onload = function() {
+            loadData();
+            calculateTotals();
+        };
+
+        function switchTab(tabId) {
+            const el = document.getElementById('section-' + tabId);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Briefly highlight section
+                el.classList.add('border-burgundy');
+                setTimeout(() => el.classList.remove('border-burgundy'), 800);
+            }
+        }
+
+        function updateCount(type, denom, change) {
+            const inputId = `${type}-${denom}`;
+            const input = document.getElementById(inputId);
+            let val = parseInt(input.value) || 0;
+            val = Math.max(0, val + change);
+            input.value = val;
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            // 1. FamPay
+            const fampayVal = parseFloat(document.getElementById('fampayInput').value) || 0;
+
+            // 2. Notes
+            let notesTotal = 0;
+            noteDenominations.forEach(denom => {
+                const count = parseInt(document.getElementById(`note-${denom}`).value) || 0;
+                notesTotal += denom * count;
+                const badge = document.getElementById(`count-note-${denom}-val`);
+                if(badge) badge.innerText = count;
+            });
+
+            // 3. Coins
+            let coinsTotal = 0;
+            coinDenominations.forEach(denom => {
+                const count = parseInt(document.getElementById(`coin-${denom}`).value) || 0;
+                coinsTotal += denom * count;
+                const badge = document.getElementById(`count-coin-${denom}-val`);
+                if(badge) badge.innerText = count;
+            });
+
+            const physicalTotal = notesTotal + coinsTotal;
+            const netWorth = fampayVal + physicalTotal;
+
+            // Update UI
+            document.getElementById('totalNetWorth').innerText = formatCurrency(netWorth);
+            document.getElementById('displayFampayTotal').innerText = formatCurrency(fampayVal);
+            document.getElementById('displayNotesTotal').innerText = formatCurrency(notesTotal);
+            document.getElementById('displayCoinsTotal').innerText = formatCurrency(coinsTotal);
+
+            // Quick pills
+            document.getElementById('pillTotalFampay').innerText = formatCurrency(fampayVal);
+            document.getElementById('pillTotalNotes').innerText = formatCurrency(notesTotal);
+            document.getElementById('pillTotalCoins').innerText = formatCurrency(coinsTotal);
+
+            document.getElementById('summaryBreakdownText').innerText = `Digital: ${formatCurrency(fampayVal)} • Physical: ${formatCurrency(physicalTotal)}`;
+
+            saveData();
+        }
+
+        function formatCurrency(amount) {
+            return '₹' + amount.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        }
+
+        function saveData() {
+            const data = {
+                fampay: document.getElementById('fampayInput').value,
+                notes: {},
+                coins: {}
+            };
+
+            noteDenominations.forEach(d => {
+                data.notes[d] = document.getElementById(`note-${d}`).value;
+            });
+
+            coinDenominations.forEach(d => {
+                data.coins[d] = document.getElementById(`coin-${d}`).value;
+            });
+
+            localStorage.setItem('vaultx_wealth_data', JSON.stringify(data));
+            
+            // Timestamp update
+            const now = new Date();
+            document.getElementById('lastUpdated').innerText = 'Synced ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function loadData() {
+            const raw = localStorage.getItem('vaultx_wealth_data');
+            if (!raw) return;
+            try {
+                const data = JSON.parse(raw);
+                if (data.fampay !== undefined) {
+                    document.getElementById('fampayInput').value = data.fampay;
+                }
+                if (data.notes) {
+                    noteDenominations.forEach(d => {
+                        if (data.notes[d] !== undefined) {
+                            document.getElementById(`note-${d}`).value = data.notes[d];
+                        }
+                    });
+                }
+                if (data.coins) {
+                    coinDenominations.forEach(d => {
+                        if (data.coins[d] !== undefined) {
+                            document.getElementById(`coin-${d}`).value = data.coins[d];
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error("Error loading saved data", e);
+            }
+        }
+
+        function resetData() {
+            if (confirm("Are you sure you want to reset all tracked amounts to zero?")) {
+                document.getElementById('fampayInput').value = 0;
+                noteDenominations.forEach(d => {
+                    document.getElementById(`note-${d}`).value = 0;
+                });
+                coinDenominations.forEach(d => {
+                    document.getElementById(`coin-${d}`).value = 0;
+                });
+                calculateTotals();
+                showToast("All values reset");
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
